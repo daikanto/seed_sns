@@ -1,3 +1,24 @@
+<?php 
+
+ session_start();
+  require('dbconnect.php');
+
+ //もしtweet_idパラメーターがなければindex.phpへ強制遷移
+ if (empty($_REQUEST['tweet_id'])) {
+   header('Location: index.php');
+   exit();
+ }
+
+//パラメータのtweet_idを使ってtweetsデータを一件取得
+ $sql= sprintf('SELECT m.`nick_name`,m.`picture_path`,t.*from `tweets` t,`members` m WHERE m.`member_id`=t.`member_id` AND t.`tweet_id`=%d',mysqli_real_escape_string($db,$_REQUEST['tweet_id']));
+
+ $tweets=mysqli_query($db, $sql) or die(mysqli_error($db));
+
+
+
+
+ ?>
+
 <!DOCTYPE html>
 <html lang="ja">
   <head>
@@ -8,14 +29,11 @@
     <title>SeedSNS</title>
 
     <!-- Bootstrap -->
-    <link href="../assets/css/bootstrap.css" rel="stylesheet">
-    <link href="../assets/font-awesome/css/font-awesome.css" rel="stylesheet">
-    <link href="../assets/css/form.css" rel="stylesheet">
-    <link href="../assets/css/timeline.css" rel="stylesheet">
-    <link href="../assets/css/main.css" rel="stylesheet">
-    <!--
-      designフォルダ内では2つパスの位置を戻ってからcssにアクセスしていることに注意！
-     -->
+    <link href="assets/css/bootstrap.css" rel="stylesheet">
+    <link href="assets/font-awesome/css/font-awesome.css" rel="stylesheet">
+    <link href="assets/css/form.css" rel="stylesheet">
+    <link href="assets/css/timeline.css" rel="stylesheet">
+    <link href="assets/css/main.css" rel="stylesheet">
 
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -41,6 +59,7 @@
           <!-- Collect the nav links, forms, and other content for toggling -->
           <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
               <ul class="nav navbar-nav navbar-right">
+                <li><a href="logout.html">ログアウト</a></li>
               </ul>
           </div>
           <!-- /.navbar-collapse -->
@@ -51,35 +70,25 @@
   <div class="container">
     <div class="row">
       <div class="col-md-4 col-md-offset-4 content-margin-top">
-        <form method="post" action="" class="form-horizontal" role="form">
-          <input type="hidden" name="action" value="submit">
-          <div class="well">ご登録内容をご確認ください。</div>
-            <table class="table table-striped table-condensed">
-              <tbody>
-                <!-- 登録内容を表示 -->
-                <tr>
-                  <td><div class="text-center">ニックネーム</div></td>
-                  <td><div class="text-center">Seed kun</div></td>
-                </tr>
-                <tr>
-                  <td><div class="text-center">メールアドレス</div></td>
-                  <td><div class="text-center">seed@nex.com</div></td>
-                </tr>
-                <tr>
-                  <td><div class="text-center">パスワード</div></td>
-                  <td><div class="text-center">●●●●●●●●</div></td>
-                </tr>
-                <tr>
-                  <td><div class="text-center">プロフィール画像</div></td>
-                  <td><div class="text-center"><img src="http://c85c7a.medialib.glogster.com/taniaarca/media/71/71c8671f98761a43f6f50a282e20f0b82bdb1f8c/blog-images-1349202732-fondo-steve-jobs-ipad.jpg" width="100" height="100"></div></td>
-                </tr>
-              </tbody>
-            </table>
-
-            <a href="index.html">&laquo;&nbsp;書き直す</a> | 
-            <input type="submit" class="btn btn-default" value="会員登録">
-          </div>
-        </form>
+      <?php if($tweet=mysqli_fetch_assoc($tweets)): ?>
+        <div class="msg">
+          <img src="member_picture/<?php echo $tweet['picture_path']; ?>" width="100" height="100">
+          <p>投稿者 : <span class="name"> Seed kun </span></p>
+          <p>
+            つぶやき : <br>
+            <?php echo $tweet['tweet']; ?>
+          </p>
+          <p class="day">
+            <?php echo $tweet['created']; ?>
+            <?php if ($_SESSION['id']==$tweet['tweet_id']): ?>
+            [<a href="delete.php?tweet_id=<?php echo $tweet['tweet_id']; ?>" style="color: #F33;">削除</a>]                         
+            <?php endif ?>
+          </p>
+        </div>
+      <?php else: ?>
+        <p>そのつぶやきは削除されたか、URLが間違っています。</p>
+      <?php endif; ?>
+        <a href="index.php">&laquo;&nbsp;一覧へ戻る</a>
       </div>
     </div>
   </div>
